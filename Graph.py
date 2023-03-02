@@ -60,13 +60,4 @@ class Graph:
                 if random.random() <= probability:
                     graph.addEdge(n, k)
         return graph
-
-# g = Graph.generateGraph(5, 6)
-# g.printAdjacencyMatrix()
-# g.visualizeGraph("nazwa")
-#print()
-g = Graph.generateGraph(40,780)
-g.printAdjacencyMatrix()
-g.visualizeGraph("nazwa")
-
     
