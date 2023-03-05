@@ -3,46 +3,21 @@ import sys
 sys.path.insert(1, os.path.join(sys.path[0], '..'))
 import Graph
 
-g = [
-[0, 1, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0],
-[1, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0],
-[0, 1, 0, 1, 1, 0, 0, 0, 0, 0, 0, 1],
-[0, 0, 1, 0, 0, 0, 0, 1, 1, 0, 1, 0],
-[1, 0, 1, 0, 0, 0, 1, 0, 1, 0, 0, 0],
-[1, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0],
-[0, 0, 0, 0, 1, 1, 0, 1, 0, 0, 0, 0],
-[0, 0, 0, 1, 0, 0, 1, 0, 1, 0, 0, 1],
-[0, 0, 0, 1, 1, 0, 0, 1, 0, 1, 0, 0],
-[0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0],
-[0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0],
-[0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0]
-]
-
-g2 = [
-[1, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-[1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0],
-[0, 1, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0],
-[0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 0, 0],
-[0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0],
-[0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0],
-[0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0],
-[0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1],
-[0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0],
-[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0],
-[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0],
-[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1]
-]
-
-incG = Graph.Graph(12)
-# incG.adjacencyMatrix = g
+incG = Graph.Graph()
+# incG.readMatrixFromCsv('exampleMatrixAdjacency.csv', Graph.MatrixTypes.ADJACENCYMATRIX)
 # incG.visualizeGraph('adjacency11vertexes')
 # print('Initialized adjacency matrix:')
 # incG.printAdjacencyMatrix()
 
-incG.incidenceMatrix = g2
+incG.readInitialData('exampleMatrixIncidence.csv', Graph.MatrixTypes.INCIDENCEMATRIX)
 incG.visualizeGraph('incidence', Graph.MatrixTypes.INCIDENCEMATRIX)
 print('Initialized incidence matrix:')
 incG.printIncidenceMatrix()
+
+# incG.readInitialData('exampleAdjacencyList.csv', Graph.MatrixTypes.ADJACENCYLIST)
+# incG.printAdjacencyList()
+# incG.convertAdjListToAdjMatrix()
+# incG.visualizeGraph('listToMatrix')
 
 print('\nIncidence matrix converted to adjacency matrix:')
 incG.convertIncMatrixToAdjMatrix()

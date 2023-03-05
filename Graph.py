@@ -3,6 +3,7 @@ import networkx as nx
 import matplotlib.pyplot as plt
 import numpy as np
 from enum import Enum
+import csv
 
 class MatrixTypes(Enum):
     ADJACENCYMATRIX = 1
@@ -10,7 +11,7 @@ class MatrixTypes(Enum):
     ADJACENCYLIST = 3
 
 class Graph:    
-    def __init__(self, vertexNumber):
+    def __init__(self, vertexNumber = 0):
         self.vertexNumber = vertexNumber
         self.vertexList = [n for n in range(vertexNumber)]
         # uzupelniam macierze zerami
@@ -20,6 +21,42 @@ class Graph:
         # oraz pustymi listami jako wartosci
         self.adjacencyList = dict.fromkeys(range(vertexNumber), [])
         self.edges = []
+
+    def readMatrixFromCsv(self, filePath, MatrixType):
+        matrix = [] 
+        with open(filePath, newline='', encoding='utf-8-sig') as csvfile:
+            reader = csv.reader(csvfile, delimiter=',')
+            for row in reader:
+                matrix.append([int(elem) for elem in row])
+        self.vertexNumber = len(matrix)
+        if MatrixType == MatrixTypes.ADJACENCYMATRIX:
+            self.adjacencyMatrix = matrix
+            if not self.incidenceMatrix:
+                self.incidenceMatrix = [[0 for _ in range(self.vertexNumber)] for _ in range(self.vertexNumber)]
+        elif MatrixType == MatrixTypes.INCIDENCEMATRIX:
+            self.incidenceMatrix = matrix
+            if not self.adjacencyMatrix:
+                self.adjacencyMatrix = [[0 for _ in range(self.vertexNumber)] for _ in range(self.vertexNumber)]
+
+        
+    # WAZNE!
+    # pierwszy element rzedu w pliku csv dla listy to numer krawedzi, reszta elementow to sasiedzi
+    def readListFromCsv(self, filePath):
+        adjacencyList = {}
+        with open(filePath, newline='', encoding='utf-8-sig') as csvfile:
+            reader = csv.reader(csvfile, delimiter=',')
+            for row in reader:
+                key = int(row[0])
+                values = [int(elem) for elem in row[1:]]
+                adjacencyList[key] = values
+        self.vertexNumber = len(adjacencyList)
+        self.adjacencyList = adjacencyList
+
+    def readInitialData(self, filePath, MatrixType):
+        if MatrixType == MatrixTypes.ADJACENCYLIST:
+            self.readListFromCsv(filePath)
+        else:
+            self.readMatrixFromCsv(filePath, MatrixType)
 
     def addEdge(self, vertexFirst, vertexSecond):
         # dodaje krawedz do macierzy sasiedztwa
@@ -126,7 +163,8 @@ class Graph:
                 self.getEdgesInIncidenceMatrix()
             elif matrixType == MatrixTypes.ADJACENCYLIST:
                 self.getEdgesInAdjacencyList()
-            self.getEdgesInAdjacencyMatrix()
+            else:
+                self.getEdgesInAdjacencyMatrix()
 
     # zamiana w macierz sasiedztwa dowolnego z dwoch pozostalych typow w celu zwizualizowania macierzy
     def transformToAdjacencyMatrix(self, matrixType):
