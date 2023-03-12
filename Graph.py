@@ -206,3 +206,34 @@ class Graph:
                 if random.random() <= probability:
                     graph.addEdge(n, k)
         return graph
+    
+    # spójne składowe tworzymy z pomocą listy sąsiedztwa
+    def components(self):
+        nr = 0
+        comp = [-1 for n in range(self.vertexNumber)]
+        for n in range(self.vertexNumber):
+            if comp[n] == -1:
+                nr += 1
+                comp[n] = nr
+                self.components_R(nr, n, comp)
+        return comp
+        
+
+    def components_R(self, nr, n, comp):
+        for k in self.adjacencyList[n]:
+            if comp[k] == -1:
+                comp[k] = nr
+                self.components_R(nr, k, comp)
+    
+    def maxComp(self, comp):
+        numberOfComponents = max(comp)
+        components = {}
+        for n in range(numberOfComponents):
+            components[n + 1] = []
+        for n in range(self.vertexNumber):
+            components[comp[n]].append(n)
+        for key in components:
+            print(str(key) + ")", components[key])
+        maxComponent = max((len(v), k) for k,v in components.items())
+        print("Najwieksza skladowa ma numer " + str(maxComponent[1]) + ".")
+        
