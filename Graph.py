@@ -10,7 +10,7 @@ class MatrixTypes(Enum):
     INCIDENCEMATRIX = 2
     ADJACENCYLIST = 3
 
-class Graph:    
+class Graph:
     def __init__(self, vertexNumber = 0):
         self.vertexNumber = vertexNumber
         self.vertexList = [n for n in range(vertexNumber)]
@@ -23,7 +23,7 @@ class Graph:
         self.edges = []
 
     def readMatrixFromCsv(self, filePath, MatrixType):
-        matrix = [] 
+        matrix = []
         with open(filePath, newline='', encoding='utf-8-sig') as csvfile:
             reader = csv.reader(csvfile, delimiter=',')
             for row in reader:
@@ -38,7 +38,7 @@ class Graph:
             if not self.adjacencyMatrix:
                 self.adjacencyMatrix = [[0 for _ in range(self.vertexNumber)] for _ in range(self.vertexNumber)]
 
-        
+
     # WAZNE!
     # pierwszy element rzedu w pliku csv dla listy to numer krawedzi, reszta elementow to sasiedzi
     def readListFromCsv(self, filePath):
@@ -70,7 +70,7 @@ class Graph:
     def printAdjacencyList(self):
         for i in self.adjacencyList:
             print(i, self.adjacencyList[i])
-    
+
     def printIncidenceMatrix(self):
         for row in self.incidenceMatrix:
             print(row)
@@ -107,7 +107,7 @@ class Graph:
                     edgeVertices.append(j)
             self.adjacencyMatrix[edgeVertices[0]][edgeVertices[1]] = 1
             self.adjacencyMatrix[edgeVertices[1]][edgeVertices[0]] = 1
-    
+
     # macierz incydencji -> lista sasiedztwa
     def convertIncMatrixToAdjList(self):
         self.convertIncMatrixToAdjMatrix()
@@ -118,12 +118,12 @@ class Graph:
         for rowNum in self.adjacencyList:
             for colNum in self.adjacencyList[rowNum]:
                 self.adjacencyMatrix[rowNum][colNum] = 1
-    
+
     # lista sasiedztwa -> macierz incydencji
     def convertAdjListToIncMatrix(self):
         self.convertAdjListToAdjMatrix()
         self.convertAdjMatrixToIncMatrix()
-                
+
     # rysowanie jest na podstawie macierzy sasiedztwa robione wiec trzeba zaimplementowac wszystkie algorytmy zamiany
     # i jakoś dodać przekazywanie do programu wartosci z pliku ktore utworza graf z macierza sasiedztwa
     def visualizeGraph(self, name, matrixType=MatrixTypes.ADJACENCYMATRIX):
@@ -152,7 +152,7 @@ class Graph:
             for k in range(n + 1, self.vertexNumber):
                 if self.adjacencyMatrix[n][k] == 1:
                         self.edges.append((n, k))
-    
+
     def getEdgesInAdjacencyList(self):
         self.convertAdjListToAdjMatrix()
         self.getEdgesInAdjacencyMatrix()
@@ -206,7 +206,7 @@ class Graph:
                 if random.random() <= probability:
                     graph.addEdge(n, k)
         return graph
-    
+
     # spójne składowe tworzymy z pomocą listy sąsiedztwa
     def components(self):
         nr = 0
@@ -217,14 +217,14 @@ class Graph:
                 comp[n] = nr
                 self.components_R(nr, n, comp)
         return comp
-        
+
 
     def components_R(self, nr, n, comp):
         for k in self.adjacencyList[n]:
             if comp[k] == -1:
                 comp[k] = nr
                 self.components_R(nr, k, comp)
-    
+
     def maxComp(self, comp):
         numberOfComponents = max(comp)
         components = {}
@@ -236,4 +236,63 @@ class Graph:
             print(str(key) + ")", components[key])
         maxComponent = max((len(v), k) for k,v in components.items())
         print("Najwieksza skladowa ma numer " + str(maxComponent[1]) + ".")
-        
+
+    @staticmethod
+    def checkIfDegreeSequenceIsGraphic(arr, show=False):
+        while True:
+
+            arr.sort(reverse=True)
+
+            if show:
+                print(arr)
+
+            if arr[0] == 0 and arr[len(arr)-1] == 0:
+                return True
+
+            first = arr[0]
+            arr = arr[1:]
+
+            if first > len(arr):
+                return False
+
+            for i in range(first):
+                arr[i] -= 1
+
+                if arr[i] < 0:
+                    return False
+
+    @staticmethod
+    def generateGraphFromDegreeSequence(arr, name):
+
+        if Graph.checkIfDegreeSequenceIsGraphic(arr):
+            n = len(arr)
+            arr.sort(reverse=True)
+            mat = [[0] * n for i in range(n)]
+
+            for i in range(n):
+                for j in range(i + 1, n):
+
+                    # For each pair of vertex decrement
+                    # the degree of both vertex.
+                    if (arr[i] > 0 and arr[j] > 0):
+                        arr[i] -= 1
+                        arr[j] -= 1
+                        mat[i][j] = 1
+                        mat[j][i] = 1
+
+            with open('mat.csv', 'w', newline='') as file:
+                writer = csv.writer(file)
+
+                for i in range(n):
+                    row = []
+                    for j in range(n):
+                        row.append(mat[i][j])
+                    writer.writerow(row)
+
+            graph = Graph()
+            graph.readMatrixFromCsv('mat.csv', MatrixType=MatrixTypes.ADJACENCYMATRIX)
+            graph.visualizeGraph(name)
+        else:
+            print("Given degree sequence is not graphic")
+
+
