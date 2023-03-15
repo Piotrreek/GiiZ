@@ -21,6 +21,20 @@ class Graph:
         # oraz pustymi listami jako wartosci
         self.adjacencyList = dict.fromkeys(range(vertexNumber), [])
         self.edges = []
+        # tworzę macierz wag zainicjalizowaną wartoscia NaN
+        self.weights = [["NaN" for _ in range(self.vertexNumber)] for _ in range(self.vertexNumber)]
+
+    def readWeightsFromCsv(self, filePath):
+        with open(filePath, newline='', encoding='utf-8-sig') as csvfile:
+            reader = csv.reader(csvfile, delimiter=',')
+            r = -1
+            for row in reader:
+                w = -1 
+                r += 1
+                for weight in row:
+                    w += 1
+                    if weight != "NaN":
+                        self.weights[r][w] = int(weight)
 
     def readMatrixFromCsv(self, filePath, MatrixType):
         matrix = []
@@ -57,6 +71,7 @@ class Graph:
             self.readListFromCsv(filePath)
         else:
             self.readMatrixFromCsv(filePath, MatrixType)
+        self.weights = [["NaN" for _ in range(self.vertexNumber)] for _ in range(self.vertexNumber)]
 
     def addEdge(self, vertexFirst, vertexSecond):
         # dodaje krawedz do macierzy sasiedztwa
@@ -236,6 +251,67 @@ class Graph:
             print(str(key) + ")", components[key])
         maxComponent = max((len(v), k) for k,v in components.items())
         print("Najwieksza skladowa ma numer " + str(maxComponent[1]) + ".")
+
+    def init(self, vertexId):
+        # definiuje tablice najkrotszych sciezek miedzy wierzcholkami oraz poprzednikow dla kazdego wierzcholka
+        lengths = [1e10 for _ in range(self.vertexNumber)]
+        predecessors = ["NIL" for _ in range(self.vertexNumber)] 
+        # dlugosc wierzcholka do samego siebie jest rowna 0
+        lengths[vertexId] = 0
+        return lengths, predecessors
+    
+    def relax(self, u, v, weights, lengths, predecessors):
+        if lengths[v] > lengths[u] + weights[u][v]:
+            lengths[v] = lengths[u] + weights[u][v]
+        predecessors[v] = u
+
+    def Dijkstra(self, vertexId, shouldPrint = False):
+        lengths, predecessors = self.init(vertexId)
+        S = []
+        while len(S) != self.vertexNumber:
+            notReadyVertexes = [vertex for vertex in self.vertexList if vertex not in S]
+            u = min(notReadyVertexes, key=lambda x: lengths[x])
+            S.append(u)
+            neighboursOfVertexU = [vertex for vertex in self.adjacencyList[u] if vertex not in S]
+            for vertex in neighboursOfVertexU:
+                self.relax(u, vertex, self.weights, lengths, predecessors)
+        if shouldPrint:
+            print(f'START: s = {vertexId}')
+            for vertex in range(self.vertexNumber):
+                print(f'd({vertex}) = {lengths[vertex]} ==>', end=' ')
+                print('[', end='')
+                path = [vertex]
+                precedessor = predecessors[vertex]
+                while precedessor != "NIL":
+                    path.append(precedessor)
+                    precedessor = predecessors[precedessor]
+                path = path[::-1]
+                for val in path:
+                    if(val != path[-1]):
+                        print(f'{val} - ', end='')
+                    else:
+                        print(f'{val}]')
+        return lengths
+
+    def getMatrixOfDistances(self):
+        distances = []
+        for vertex in range(self.vertexNumber):
+            distancesRow = self.Dijkstra(vertex)
+            distances.append(distancesRow)
+        for row in distances:
+            for dist in row:
+                print("%2d " % (dist), end='')
+            print()
+            
+    def getCenters(self):
+        distances = []
+        for vertex in range(self.vertexNumber):
+            distancesRow = self.Dijkstra(vertex)
+            distances.append(distancesRow)
+        center = distances.index(min(distances, key=lambda x: sum(x)))
+        print(f'Centrum = {center} (suma odleglosci: {sum(distances[center])})')
+        minimax = distances.index(min(distances, key=lambda x: max(x)))
+        print(f'Centrum minimax = {minimax} (odleglosc od najdalszego: {max(distances[minimax])})')
 
     @staticmethod
     def checkIfDegreeSequenceIsGraphic(arr, show=False):
