@@ -105,7 +105,6 @@ class Graph:
         if not self.edges:
             self.getEdgesInAdjacencyMatrix()
         self.incidenceMatrix = np.zeros([self.vertexNumber + 1, len(self.edges)], dtype="int")
-        print(f'Edges:\n{self.edges}')
         for i, edge in enumerate(self.edges):
             l, r = edge
             self.incidenceMatrix[l][i] = 1
@@ -314,6 +313,54 @@ class Graph:
         print(f'Centrum minimax = {minimax} (odleglosc od najdalszego: {max(distances[minimax])})')
 
     @staticmethod
+    def isHamiltonian(adjList, matrixType):
+        vertexNum = len(adjList) 
+        visited = [False] * vertexNum 
+        path = [] 
+        graph = Graph()
+        graph.setAdjList(adjList, matrixType, graph)
+
+        def dfs(vertex):
+            visited[vertex] = True
+            path.append(vertex)
+
+            if len(path) == vertexNum:
+                if path[-1] in graph.adjacencyList[path[0]]: 
+                    return True
+                else:
+                    visited[vertex] = False
+                    path.pop()
+                    return False
+
+            for neighbor in graph.adjacencyList[vertex]:
+                if not visited[neighbor]:
+                    if dfs(neighbor):
+                        return True
+
+            visited[vertex] = False
+            path.pop()
+            return False
+
+        for startVertex in range(vertexNum):
+            if dfs(startVertex):
+                return True
+
+        return False
+
+    @staticmethod
+    def setAdjList(adjList, matrixType, graph):
+        if matrixType == MatrixTypes.ADJACENCYMATRIX:
+            graph.adjacencyMatrix = adjList
+            graph.getEdges(matrixType)
+            graph.convertAdjMatrixToList()
+        elif matrixType == MatrixTypes.INCIDENCEMATRIX:
+            graph.incidenceMatrix = adjList
+            graph.getEdges(matrixType)
+            graph.convertIncMatrixToList()
+        else: 
+            graph.adjacencyList = adjList
+
+    @staticmethod
     def checkIfDegreeSequenceIsGraphic(arr, show=False):
         while True:
 
@@ -339,7 +386,6 @@ class Graph:
 
     @staticmethod
     def generateGraphFromDegreeSequence(arr, name):
-
         if Graph.checkIfDegreeSequenceIsGraphic(arr):
             n = len(arr)
             arr.sort(reverse=True)
@@ -370,5 +416,3 @@ class Graph:
             graph.visualizeGraph(name)
         else:
             print("Given degree sequence is not graphic")
-
-
