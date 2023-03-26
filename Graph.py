@@ -232,7 +232,6 @@ class Graph:
                 self.components_R(nr, n, comp)
         return comp
 
-
     def components_R(self, nr, n, comp):
         for k in self.adjacencyList[n]:
             if comp[k] == -1:
@@ -250,7 +249,108 @@ class Graph:
             print(str(key) + ")", components[key])
         maxComponent = max((len(v), k) for k,v in components.items())
         print("Najwieksza skladowa ma numer " + str(maxComponent[1]) + ".")
+    
+    def findBridges(self):
+        visited = set()
+        parent = {}
+        dfs_numbers={}
+        low = {}
+        bridges = []
 
+        def dfs(node, counter=0):
+            visited.add(node)
+            dfs_numbers[node] = counter
+            low[node] = counter
+            counter += 1
+            for neighbor in self.adjacencyList[node]:
+                if neighbor not in visited:
+                    parent[neighbor] = node
+                    dfs(neighbor, counter)
+                    low[node] = min(low[node], low[neighbor])
+                    if(low[node] == dfs_numbers[node] and parent[node] != None):
+                        bridges.append((node,parent[node]))
+                elif neighbor != parent.get(node, None):
+                    low[node] = min(low[node], low[neighbor])
+                elif (len(self.adjacencyList[node]) == 1 and low[node] == dfs_numbers[node] and parent[node] != None):
+                        bridges.append((node,parent[node]))  
+
+        counter = 1
+        #in theory might be working on only one function call - but testing proves otherwise
+        for node in self.adjacencyList:
+            if node not in visited:
+                parent[node] = None
+                dfs(node, counter)
+        return bridges
+    
+    def edgeIsBridge(self,edge):
+            bridges = self.findBridges()
+            for bridge in bridges:
+                if(edge[0] == bridge[0] and edge[1] == bridge[1] or edge[0] == bridge[1] and edge[1] == bridge[0]):
+                    return True
+            return False
+    
+    def getEdgesFromVertex(self,vertex,edges):
+        founded_edges =[]
+        for edge in edges:    
+            if(edge[0] == vertex or edge[1] == vertex):
+                founded_edges.append(edge)
+        return founded_edges
+    #checks requirements on adjList works on edges
+    def findEulerCycle(self):
+        eulerCycle = []
+        copyOfGraph = Graph(4)
+        copyOfGraph = self
+        #Checking requirements
+        comp = self.components()
+        if(max(comp) != 1):
+            print("Graf nie jest spójny --> nie jest eulerowski")
+            return
+        for i in range(0,self.vertexNumber):
+            if len(self.adjacencyList[i]) % 2 != 0:
+                print("Nieparzysty stopień wierzchołka - graf nie jest eulerowski.")
+                return
+        
+        start_vertex = 0
+        current_vertex = start_vertex
+        while(True):
+            eulerCycle.append(current_vertex)
+            if(len(self.getEdgesFromVertex(current_vertex,copyOfGraph.edges)) == 0):
+                if(eulerCycle[0] == current_vertex):
+                    print("Znaleziono cykl eulera")
+                    return eulerCycle
+                else:
+                    print("Ten graf nie ma cyklu eulera")
+                    return None
+            for edge in self.getEdgesFromVertex(current_vertex,copyOfGraph.edges):
+                if(copyOfGraph.edgeIsBridge(edge)):
+                    if(len(self.getEdgesFromVertex(current_vertex,copyOfGraph.edges)) == 1):
+                        if(current_vertex == edge[0]):
+                            current_vertex = edge[1]
+                        else:
+                            current_vertex = edge[0]
+                        copyOfGraph.edges.remove(edge)
+                        copyOfGraph.transformToAdjacencyMatrix(MatrixTypes.ADJACENCYLIST)
+                        copyOfGraph.adjacencyMatrix[edge[0]][edge[1]] = 0
+                        copyOfGraph.adjacencyMatrix[edge[1]][edge[0]] = 0
+                        copyOfGraph.convertAdjMatrixToList()
+                        break
+                else:
+                    if(current_vertex == edge[0]):
+                        current_vertex = edge[1]
+                    else:
+                        current_vertex = edge[0]
+                    copyOfGraph.edges.remove(edge)
+                    copyOfGraph.transformToAdjacencyMatrix(MatrixTypes.ADJACENCYLIST)
+                    copyOfGraph.adjacencyMatrix[edge[0]][edge[1]] = 0
+                    copyOfGraph.adjacencyMatrix[edge[1]][edge[0]] = 0
+                    copyOfGraph.convertAdjMatrixToList()
+                    break
+    def isInTheList(self,list,firstElem,secondElem):
+        for tup in list:
+            if firstElem in tup and secondElem in tup:
+                return True
+        return False
+    
     def init(self, vertexId):
         # definiuje tablice najkrotszych sciezek miedzy wierzcholkami oraz poprzednikow dla kazdego wierzcholka
         lengths = [1e10 for _ in range(self.vertexNumber)]
@@ -346,7 +446,52 @@ class Graph:
                 return True
 
         return False
-
+    @staticmethod
+    def generateEulerGraph(vertexNumber):
+        graph = Graph(vertexNumber)
+        edges = []
+        vertDeg = []
+        for vertex in range(0,vertexNumber): 
+            random_even_number = random.randint(1,(vertexNumber-1)//2) * 2
+            vertDeg.append(random_even_number)
+        vertDegCopy = vertDeg.copy()
+        for vertex in range(0,vertexNumber):
+            for k in range(vertDeg[vertex]):
+                counter = 0
+                for i in range(0,vertexNumber):
+                    if(not graph.isInTheList(edges,vertex,i) and vertDeg[i] >= 1 and i != vertex):
+                        counter += 1
+                if(counter == 0):
+                    print("tego grafu nie da się stworzyć - reset")
+                    return None
+                while True:
+                    random_vertex = random.randint(0, vertexNumber-1)
+                    if(graph.isInTheList(edges,vertex,random_vertex)):
+                      continue
+                    if(random_vertex != vertex and vertDeg[random_vertex] >= 1):
+                        edges.append((vertex, random_vertex))
+                        vertDeg[vertex] -= 1
+                        vertDeg[random_vertex] -= 1
+                        break         
+        for n in range(len(edges)):
+            graph.addEdge(edges[n][0],edges[n][1])
+        graph.getEdgesInAdjacencyMatrix()
+        graph.convertAdjMatrixToList()
+        print("Stworzono graf Eulerowski")
+        print("Stopnie wierzchołków: ",vertDegCopy)
+        return graph
+    @staticmethod
+    def generateRegularGraph(vertexNumber,vertexDegree,name):
+        #Checking requirements
+        if(vertexNumber <= vertexDegree or (vertexDegree % 2 == 1 and vertexNumber % 2 ==1)):
+            print("Warunki nie są spełnione")
+            return 
+        sequence = []
+        for i in range (vertexNumber):
+            sequence.append(vertexDegree)
+        Graph.generateGraphFromDegreeSequence2(sequence,name)
+        #randomizacja
+        #brak kodu
     @staticmethod
     def setAdjList(adjList, matrixType, graph):
         if matrixType == MatrixTypes.ADJACENCYMATRIX:
@@ -402,6 +547,67 @@ class Graph:
                         mat[i][j] = 1
                         mat[j][i] = 1
 
+            with open('mat.csv', 'w', newline='') as file:
+                writer = csv.writer(file)
+
+                for i in range(n):
+                    row = []
+                    for j in range(n):
+                        row.append(mat[i][j])
+                    writer.writerow(row)
+
+            graph = Graph()
+            graph.readMatrixFromCsv('mat.csv', MatrixType=MatrixTypes.ADJACENCYMATRIX)
+            graph.visualizeGraph(name)
+        else:
+            print("Given degree sequence is not graphic")
+    @staticmethod
+    def generateGraphFromDegreeSequence2(arr, name):
+        if Graph.checkIfDegreeSequenceIsGraphic(arr):
+            n = len(arr)
+            arr.sort(reverse=True)
+            mat = [[0] * n for i in range(n)]
+            #old version not working for [2,2,2,2]
+            # for i in range(n):
+            #     for j in range(i + 1, n):
+
+            #         # For each pair of vertex decrement
+            #         # the degree of both vertex.
+            #         if (arr[i] > 0 and arr[j] > 0):
+            #             arr[i] -= 1
+            #             arr[j] -= 1
+            #             mat[i][j] = 1
+            #             mat[j][i] = 1
+            
+            #new version not checked old examples possible that this is overcomplicated because I didn't see error earlier and I am to tired to go back to easier implementations
+            vertexValue = []
+            for i in range (n):
+                vertexValue.append((i,arr[i]))
+            max_tuple = vertexValue[0]
+            while(True):
+                for j in range(1, n):
+
+                    # For each pair of vertex decrement
+                    # the degree of both vertex.
+                    if (arr[0] > 0 and arr[j] > 0):
+                        arr[0] -= 1
+                        arr[j] -= 1
+                        for tup in vertexValue:
+                            if (tup[1] == (arr[j]+1) and tup[0] != max_tuple[0]):
+                                tuple_number = tup[0]
+                                break
+                        mat[max_tuple[0]][tuple_number] = 1
+                        mat[tuple_number][max_tuple[0]] = 1
+                        vertexValue[tuple_number] = (vertexValue[tuple_number][0],vertexValue[tuple_number][1]-1)
+                vertexValue[max_tuple[0]] = (vertexValue[max_tuple[0]][0],0)
+                arr.sort(reverse=True)
+                max_value = -1
+                for tup in vertexValue:
+                    if tup[1] > max_value:
+                        max_value = tup[1]
+                        max_tuple = tup
+                if(arr[0] == 0):
+                    break
             with open('mat.csv', 'w', newline='') as file:
                 writer = csv.writer(file)
 
