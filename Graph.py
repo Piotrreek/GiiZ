@@ -401,6 +401,31 @@ class NotDirectedGraph(Graph):
         minimax = distances.index(min(distances, key=lambda x: max(x)))
         print(f'Centrum minimax = {minimax} (odleglosc od najdalszego: {max(distances[minimax])})')
 
+    def getMST(self):
+        edgesToWeightsOfEdges = self.getEdgesToWeightsOfEdgesDict()
+        sets = {v: set([v]) for edge in edgesToWeightsOfEdges for v in edge}
+        mst = []
+        for edge in edgesToWeightsOfEdges:
+            # sprawdzamy czy wierzcholki nalezace do krawedzi naleza do roznych zbiorow
+            if sets[edge[0]] != sets[edge[1]]:
+                mst.append(edge)
+                # laczymy zbiory wierzcholkow
+                set1 = sets[edge[0]]
+                set2 = sets[edge[1]]
+                union = set1.union(set2)
+                for v in union:
+                    sets[v] = union
+        return mst
+
+
+    def getEdgesToWeightsOfEdgesDict(self):
+        edgesToWeightsOfEdges = {}
+        for j in range(len(self.weights)):
+            for i in range(len(self.weights[j])):
+                if (not (j,i) in edgesToWeightsOfEdges) and j!=i and self.weights[i][j] != 0:
+                    edgesToWeightsOfEdges[(i,j)] = self.weights[i][j]
+        return {k: v for k, v in sorted(edgesToWeightsOfEdges.items(), key=lambda item: item[1])}
+
     @staticmethod
     def isHamiltonian(adjList, matrixType):
         vertexNum = len(adjList) 
