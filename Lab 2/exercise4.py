@@ -3,7 +3,7 @@ import sys
 sys.path.insert(1, os.path.join(sys.path[0], '..'))
 import Graph
 
-#graph = Graph.Graph(4)
+#graph = Graph.NotDirectedGraph(4)
 #graph.readInitialData('euler.csv', Graph.MatrixTypes.ADJACENCYLIST)
 # graph.convertAdjListToAdjMatrix()
 # graph.visualizeGraph("ex4")
@@ -13,9 +13,9 @@ import Graph
 #     print(cycle)
 vertexNumber = 5
 
-g = Graph.Graph.generateEulerGraph(vertexNumber)
+g = Graph.NotDirectedGraph.generateEulerGraph(vertexNumber)
 while(g is None):
-    g = Graph.Graph.generateEulerGraph(vertexNumber)
+    g = Graph.NotDirectedGraph.generateEulerGraph(vertexNumber)
 if(g is not  None):
     g.convertAdjListToAdjMatrix()
     #print(g.edges)

@@ -9,7 +9,6 @@ class MatrixTypes(Enum):
     ADJACENCYMATRIX = 1
     INCIDENCEMATRIX = 2
     ADJACENCYLIST = 3
-
 class Graph:
     def __init__(self, vertexNumber = 0):
         self.vertexNumber = vertexNumber
@@ -23,19 +22,7 @@ class Graph:
         self.edges = []
         # tworzę macierz wag zainicjalizowaną wartoscia NaN
         self.weights = [["NaN" for _ in range(self.vertexNumber)] for _ in range(self.vertexNumber)]
-
-    def readWeightsFromCsv(self, filePath):
-        with open(filePath, newline='', encoding='utf-8-sig') as csvfile:
-            reader = csv.reader(csvfile, delimiter=',')
-            r = -1
-            for row in reader:
-                w = -1 
-                r += 1
-                for weight in row:
-                    w += 1
-                    if weight != "NaN":
-                        self.weights[r][w] = int(weight)
-
+    
     def readMatrixFromCsv(self, filePath, MatrixType):
         matrix = []
         with open(filePath, newline='', encoding='utf-8-sig') as csvfile:
@@ -51,9 +38,7 @@ class Graph:
             self.incidenceMatrix = matrix
             if not self.adjacencyMatrix:
                 self.adjacencyMatrix = [[0 for _ in range(self.vertexNumber)] for _ in range(self.vertexNumber)]
-
-
-    # WAZNE!
+     # WAZNE!
     # pierwszy element rzedu w pliku csv dla listy to numer krawedzi, reszta elementow to sasiedzi
     def readListFromCsv(self, filePath):
         adjacencyList = {}
@@ -89,7 +74,6 @@ class Graph:
     def printIncidenceMatrix(self):
         for row in self.incidenceMatrix:
             print(row)
-
     # macierz sasiedztwa -> lista sasiedztwa
     def convertAdjMatrixToList(self):
         adjacencyListRow = []
@@ -99,58 +83,19 @@ class Graph:
                     adjacencyListRow.append(col)
             self.adjacencyList[row] = adjacencyListRow
             adjacencyListRow = []
-
-    # macierz sasiedztwa -> macierz incydencji
-    def convertAdjMatrixToIncMatrix(self):
-        if not self.edges:
-            self.getEdgesInAdjacencyMatrix()
-        self.incidenceMatrix = np.zeros([self.vertexNumber + 1, len(self.edges)], dtype="int")
-        for i, edge in enumerate(self.edges):
-            l, r = edge
-            self.incidenceMatrix[l][i] = 1
-            self.incidenceMatrix[r][i] = 1
-        self.incidenceMatrix = self.incidenceMatrix[0:-1]
-
-    # macierz incydencji -> macierz sasiedztwa
-    def convertIncMatrixToAdjMatrix(self):
-        num_edges = len(self.incidenceMatrix[0])
-        for i in range(num_edges):
-            edgeVertices = []
-            for j in range(self.vertexNumber):
-                if self.incidenceMatrix[j][i] == 1:
-                    edgeVertices.append(j)
-            self.adjacencyMatrix[edgeVertices[0]][edgeVertices[1]] = 1
-            self.adjacencyMatrix[edgeVertices[1]][edgeVertices[0]] = 1
-
     # macierz incydencji -> lista sasiedztwa
     def convertIncMatrixToAdjList(self):
         self.convertIncMatrixToAdjMatrix()
         self.convertAdjMatrixToList()
-
     # lista sasiedztwa -> macierz sasiedztwa
     def convertAdjListToAdjMatrix(self):
         for rowNum in self.adjacencyList:
             for colNum in self.adjacencyList[rowNum]:
                 self.adjacencyMatrix[rowNum][colNum] = 1
-
     # lista sasiedztwa -> macierz incydencji
     def convertAdjListToIncMatrix(self):
         self.convertAdjListToAdjMatrix()
         self.convertAdjMatrixToIncMatrix()
-
-    # rysowanie jest na podstawie macierzy sasiedztwa robione wiec trzeba zaimplementowac wszystkie algorytmy zamiany
-    # i jakoś dodać przekazywanie do programu wartosci z pliku ktore utworza graf z macierza sasiedztwa
-    def visualizeGraph(self, name, matrixType=MatrixTypes.ADJACENCYMATRIX):
-        self.getEdges(matrixType)
-        self.transformToAdjacencyMatrix(matrixType)
-        graph = nx.Graph()
-        graph.add_nodes_from(self.vertexList)
-        for edge in self.edges:
-            graph.add_edge(edge[0], edge[1])
-        nx.draw_circular(graph, with_labels = True)
-        plt.savefig(name + ".png")
-        plt.clf()
-
     # wyliczanie krawedzi z poszczegolnych macierzy
     def getEdgesInIncidenceMatrix(self):
         for i in range(len(self.incidenceMatrix[0])):
@@ -160,12 +105,6 @@ class Graph:
                     edge.append(j)
             if len(edge) == 2:
                 self.edges.append(tuple(edge))
-
-    def getEdgesInAdjacencyMatrix(self):
-        for n in range(self.vertexNumber):
-            for k in range(n + 1, self.vertexNumber):
-                if self.adjacencyMatrix[n][k] == 1:
-                        self.edges.append((n, k))
 
     def getEdgesInAdjacencyList(self):
         self.convertAdjListToAdjMatrix()
@@ -179,7 +118,6 @@ class Graph:
                 self.getEdgesInAdjacencyList()
             else:
                 self.getEdgesInAdjacencyMatrix()
-
     # zamiana w macierz sasiedztwa dowolnego z dwoch pozostalych typow w celu zwizualizowania macierzy
     def transformToAdjacencyMatrix(self, matrixType):
         if matrixType == MatrixTypes.INCIDENCEMATRIX:
@@ -187,13 +125,64 @@ class Graph:
         elif matrixType == MatrixTypes.ADJACENCYLIST:
             self.convertAdjListToAdjMatrix()
 
+class NotDirectedGraph(Graph):
+   
+    def readWeightsFromCsv(self, filePath):
+        with open(filePath, newline='', encoding='utf-8-sig') as csvfile:
+            reader = csv.reader(csvfile, delimiter=',')
+            r = -1
+            for row in reader:
+                w = -1 
+                r += 1
+                for weight in row:
+                    w += 1
+                    if weight != "NaN":
+                        self.weights[r][w] = int(weight)
+    # macierz sasiedztwa -> macierz incydencji
+    def convertAdjMatrixToIncMatrix(self):
+        if not self.edges:
+            self.getEdgesInAdjacencyMatrix()
+        self.incidenceMatrix = np.zeros([self.vertexNumber + 1, len(self.edges)], dtype="int")
+        for i, edge in enumerate(self.edges):
+            l, r = edge
+            self.incidenceMatrix[l][i] = 1
+            self.incidenceMatrix[r][i] = 1
+        self.incidenceMatrix = self.incidenceMatrix[0:-1]
+    # macierz incydencji -> macierz sasiedztwa
+    def convertIncMatrixToAdjMatrix(self):
+        num_edges = len(self.incidenceMatrix[0])
+        for i in range(num_edges):
+            edgeVertices = []
+            for j in range(self.vertexNumber):
+                if self.incidenceMatrix[j][i] == 1:
+                    edgeVertices.append(j)
+            self.adjacencyMatrix[edgeVertices[0]][edgeVertices[1]] = 1
+            self.adjacencyMatrix[edgeVertices[1]][edgeVertices[0]] = 1
+    # rysowanie jest na podstawie macierzy sasiedztwa robione wiec trzeba zaimplementowac wszystkie algorytmy zamiany
+    # i jakoś dodać przekazywanie do programu wartosci z pliku ktore utworza graf z macierza sasiedztwa
+    def visualizeGraph(self, name, matrixType=MatrixTypes.ADJACENCYMATRIX):
+        self.getEdges(matrixType)
+        self.transformToAdjacencyMatrix(matrixType)
+        graph = nx.Graph()
+        graph.add_nodes_from(self.vertexList)
+        for edge in self.edges:
+            graph.add_edge(edge[0], edge[1])
+        nx.draw_circular(graph, with_labels = True)
+        plt.savefig(name + ".png")
+        plt.clf()
+    def getEdgesInAdjacencyMatrix(self):
+        for n in range(self.vertexNumber):
+            for k in range(n + 1, self.vertexNumber):
+                if self.adjacencyMatrix[n][k] == 1:
+                        self.edges.append((n, k))
+
     # generowanie grafu z zadana liczba wierzcholkow i krawedzi
     @staticmethod
     def generateGraph(vertexNumber, edgeNumber):
         if edgeNumber < 0 or edgeNumber > vertexNumber * (vertexNumber - 1) / 2:
             print("Number of edges is incorrect")
             exit()
-        graph = Graph(vertexNumber)
+        graph = NotDirectedGraph(vertexNumber)
         possibilities = []
         for n in range(vertexNumber):
             for k in range(vertexNumber - 1, n, -1):
@@ -212,7 +201,7 @@ class Graph:
         if not (0 <= probability <= 1):
             print("Probabillity is wrong")
             exit()
-        graph = Graph(vertexNumber)
+        graph = NotDirectedGraph(vertexNumber)
         for n in range(vertexNumber):
             for k in range(vertexNumber - 1, n, - 1):
                 if n == k:
@@ -448,7 +437,7 @@ class Graph:
         return False
     @staticmethod
     def generateEulerGraph(vertexNumber):
-        graph = Graph(vertexNumber)
+        graph = NotDirectedGraph(vertexNumber)
         edges = []
         vertDeg = []
         for vertex in range(0,vertexNumber): 
@@ -489,7 +478,7 @@ class Graph:
         sequence = []
         for i in range (vertexNumber):
             sequence.append(vertexDegree)
-        Graph.generateGraphFromDegreeSequence2(sequence,name)
+        NotDirectedGraph.generateGraphFromDegreeSequence2(sequence,name)
         #randomizacja
         #brak kodu
     @staticmethod
@@ -531,7 +520,7 @@ class Graph:
 
     @staticmethod
     def generateGraphFromDegreeSequence(arr, name):
-        if Graph.checkIfDegreeSequenceIsGraphic(arr):
+        if NotDirectedGraph.checkIfDegreeSequenceIsGraphic(arr):
             n = len(arr)
             arr.sort(reverse=True)
             mat = [[0] * n for i in range(n)]
@@ -556,30 +545,19 @@ class Graph:
                         row.append(mat[i][j])
                     writer.writerow(row)
 
-            graph = Graph()
+            graph = NotDirectedGraph()
             graph.readMatrixFromCsv('mat.csv', MatrixType=MatrixTypes.ADJACENCYMATRIX)
             graph.visualizeGraph(name)
         else:
             print("Given degree sequence is not graphic")
-    @staticmethod
+    #new version old examples now working this is overcomplicated because I didn't see error earlier and I am to tired to go back to easier implementations
+    @staticmethod 
     def generateGraphFromDegreeSequence2(arr, name):
-        if Graph.checkIfDegreeSequenceIsGraphic(arr):
+        if NotDirectedGraph.checkIfDegreeSequenceIsGraphic(arr):
             n = len(arr)
             arr.sort(reverse=True)
             mat = [[0] * n for i in range(n)]
-            #old version not working for [2,2,2,2]
-            # for i in range(n):
-            #     for j in range(i + 1, n):
-
-            #         # For each pair of vertex decrement
-            #         # the degree of both vertex.
-            #         if (arr[i] > 0 and arr[j] > 0):
-            #             arr[i] -= 1
-            #             arr[j] -= 1
-            #             mat[i][j] = 1
-            #             mat[j][i] = 1
             
-            #new version not checked old examples possible that this is overcomplicated because I didn't see error earlier and I am to tired to go back to easier implementations
             vertexValue = []
             for i in range (n):
                 vertexValue.append((i,arr[i]))
@@ -617,8 +595,119 @@ class Graph:
                         row.append(mat[i][j])
                     writer.writerow(row)
 
-            graph = Graph()
+            graph = NotDirectedGraph()
             graph.readMatrixFromCsv('mat.csv', MatrixType=MatrixTypes.ADJACENCYMATRIX)
             graph.visualizeGraph(name)
         else:
             print("Given degree sequence is not graphic")
+class DirectedGraph(Graph):
+    # macierz incydencji -> macierz sasiedztwa
+    def convertIncMatrixToAdjMatrix(self):
+        num_edges = len(self.incidenceMatrix[0])
+        for i in range(num_edges):
+            edgeVertices = [0,0]
+            for j in range(self.vertexNumber):
+                if (self.incidenceMatrix[j][i] == -1 ):
+                    edgeVertices[0] = j
+                elif (self.incidenceMatrix[j][i] == 1 ):
+                    edgeVertices[1] = j
+                
+            self.adjacencyMatrix[edgeVertices[0]][edgeVertices[1]] = 1
+    #macierz sąsiedztwa -> macierz incydencji
+    def convertAdjMatrixToIncMatrix(self):
+        if not self.edges:
+            self.getEdgesInAdjacencyMatrix()
+        self.incidenceMatrix = np.zeros([self.vertexNumber + 1, len(self.edges)], dtype="int")
+        print(f'Edges:\n{self.edges}')
+        for i, edge in enumerate(self.edges):
+            l, r = edge
+            self.incidenceMatrix[l][i] = -1
+            self.incidenceMatrix[r][i] = 1
+        self.incidenceMatrix = self.incidenceMatrix[0:-1]
+    def getEdgesInAdjacencyMatrix(self):
+        for n in range(self.vertexNumber):
+            for k in range(self.vertexNumber):
+                if self.adjacencyMatrix[n][k] == 1:
+                        self.edges.append((n, k))
+     # rysowanie jest na podstawie macierzy sasiedztwa robione wiec trzeba zaimplementowac wszystkie algorytmy zamiany
+    #różni się tylko jedną linijką od nieskierowanego można wrzucić do części wspólnej z argumentem który decyduje czy skierowany czy nie
+    def visualizeGraph(self, name, matrixType=MatrixTypes.ADJACENCYMATRIX):
+        self.getEdges(matrixType)
+        self.transformToAdjacencyMatrix(matrixType)
+        graph = nx.DiGraph()
+        graph.add_nodes_from(self.vertexList)
+        for edge in self.edges:
+            graph.add_edge(edge[0], edge[1])
+        nx.draw_circular(graph, with_labels = True)
+        plt.savefig(name + ".png")
+        plt.clf()
+    #wymaga adjlist
+    def Kosaraju(self):
+        visit = [] #czas odwiedzenia
+        final = []  #czas przetworzen
+        comp = [] # numer silnie spójnej składowej 
+        order = [] # wierczhołki w kolejności przetworzenia w dół
+        for i in range (self.vertexNumber):
+            visit.append(-1)
+            final.append(-1)
+
+        t = [0]
+        for i in range (self.vertexNumber):
+            if(visit[i] == -1):
+                self.DFS_visit(visit,final,i,t)
+       
+        graphInverted = DirectedGraph(self.vertexNumber)
+        for i in range(self.vertexNumber):
+            for j in range(self.vertexNumber):
+                if(self.adjacencyMatrix[i][j] == 1):
+                    graphInverted.adjacencyMatrix[j][i] = 1   
+        #graphInverted.visualizeGraph("skierowany graf odwrotny")
+        nr = 0
+        for i in range(graphInverted.vertexNumber):
+            comp.append(-1)
+
+        graphInverted.convertAdjMatrixToList()
+        indeksy = sorted(range(len(final)), key=lambda i: final[i], reverse=True)
+        for i in indeksy:
+            if(comp[i] == -1):
+                nr += 1
+                comp[i] = nr
+                graphInverted.components_r(nr,i,comp)
+        
+        components = {}
+        for i, x in enumerate(comp):
+            if x not in components:
+                components[x] = []
+            components[x].append(i)
+        print("Ten graf ma {} składowe:".format(len(components)))
+        print(components)
+    #works on adjlist      
+    def DFS_visit(graph,visit,final,vert,t2):
+            t2[0] += 1
+            visit[vert] = t2[0]
+            for vertex in graph.adjacencyList[vert]:
+                if(visit[vertex] == -1):
+                    graph.DFS_visit(visit,final,vertex,t2)
+            t2[0] += 1
+            final[vert] = t2[0]
+    #works on adjlist  
+    def components_r(graph,nr,vert,comp):
+        for vertex in graph.adjacencyList[vert]:
+            if(comp[vertex] == -1):
+                comp[vertex] = nr
+                graph.components_r(nr,vertex,comp)
+    @staticmethod
+    def generateGraphWithProbability(vertexNumber, probability):
+        if not (0 <= probability <= 1):
+            print("Probabillity is wrong")
+            exit()
+        graph = DirectedGraph(vertexNumber)
+        for n in range(vertexNumber):
+            for k in range(vertexNumber - 1, n, - 1):
+                if n == k:
+                    continue
+                if random.random() <= probability:
+                    graph.addEdge(n, k)
+        print(graph.edges)
+        graph.printAdjacencyMatrix()
+        return graph

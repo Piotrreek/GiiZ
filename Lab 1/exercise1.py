@@ -3,7 +3,7 @@ import sys
 sys.path.insert(1, os.path.join(sys.path[0], '..'))
 import Graph
 
-incG = Graph.Graph()
+incG = Graph.NotDirectedGraph()
 # incG.readMatrixFromCsv('exampleMatrixAdjacency.csv', Graph.MatrixTypes.ADJACENCYMATRIX)
 # incG.visualizeGraph('adjacency11vertexes')
 # print('Initialized adjacency matrix:')

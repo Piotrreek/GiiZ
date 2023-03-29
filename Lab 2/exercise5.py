@@ -6,5 +6,5 @@ import Graph
 vertexNumber = 7
 vertexDegree = 2
 
-g = Graph.Graph.generateRegularGraph(vertexNumber,vertexDegree,"regular")
+g = Graph.NotDirectedGraph.generateRegularGraph(vertexNumber,vertexDegree,"regular")
 

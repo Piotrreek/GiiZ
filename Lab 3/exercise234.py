@@ -3,7 +3,7 @@ import sys
 sys.path.insert(1, os.path.join(sys.path[0], '..'))
 import Graph
 
-graph = Graph.Graph(12)
+graph = Graph.NotDirectedGraph(12)
 graph.readInitialData('adjacencyList.csv', Graph.MatrixTypes.ADJACENCYLIST)
 graph.readWeightsFromCsv('weights.csv')
 print("Zadanie 2")
