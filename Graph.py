@@ -733,6 +733,6 @@ class DirectedGraph(Graph):
                     continue
                 if random.random() <= probability:
                     graph.addEdge(n, k)
-        print(graph.edges)
-        graph.printAdjacencyMatrix()
+        #print(graph.edges)
+        #graph.printAdjacencyMatrix()
         return graph
