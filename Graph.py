@@ -118,6 +118,19 @@ class Graph:
                 self.getEdgesInAdjacencyList()
             else:
                 self.getEdgesInAdjacencyMatrix()
+    
+    def init(self, vertexId):
+        # definiuje tablice najkrotszych sciezek miedzy wierzcholkami oraz poprzednikow dla kazdego wierzcholka
+        lengths = [1e10 for _ in range(self.vertexNumber)]
+        predecessors = ["NIL" for _ in range(self.vertexNumber)] 
+        # dlugosc wierzcholka do samego siebie jest rowna 0
+        lengths[vertexId] = 0
+        return lengths, predecessors
+    
+    def relax(self, u, v, weights, lengths, predecessors):
+        if lengths[v] > lengths[u] + weights[u][v]:
+            lengths[v] = lengths[u] + weights[u][v]
+        predecessors[v] = u 
     # zamiana w macierz sasiedztwa dowolnego z dwoch pozostalych typow w celu zwizualizowania macierzy
     def transformToAdjacencyMatrix(self, matrixType):
         if matrixType == MatrixTypes.INCIDENCEMATRIX:
@@ -340,19 +353,6 @@ class NotDirectedGraph(Graph):
                 return True
         return False
     
-    def init(self, vertexId):
-        # definiuje tablice najkrotszych sciezek miedzy wierzcholkami oraz poprzednikow dla kazdego wierzcholka
-        lengths = [1e10 for _ in range(self.vertexNumber)]
-        predecessors = ["NIL" for _ in range(self.vertexNumber)] 
-        # dlugosc wierzcholka do samego siebie jest rowna 0
-        lengths[vertexId] = 0
-        return lengths, predecessors
-    
-    def relax(self, u, v, weights, lengths, predecessors):
-        if lengths[v] > lengths[u] + weights[u][v]:
-            lengths[v] = lengths[u] + weights[u][v]
-        predecessors[v] = u
-
     def Dijkstra(self, vertexId, shouldPrint = False):
         lengths, predecessors = self.init(vertexId)
         S = []
@@ -655,19 +655,26 @@ class DirectedGraph(Graph):
                 if self.adjacencyMatrix[n][k] == 1:
                         self.edges.append((n, k))
      # rysowanie jest na podstawie macierzy sasiedztwa robione wiec trzeba zaimplementowac wszystkie algorytmy zamiany
-    #różni się tylko jedną linijką od nieskierowanego można wrzucić do części wspólnej z argumentem który decyduje czy skierowany czy nie
-    def visualizeGraph(self, name, matrixType=MatrixTypes.ADJACENCYMATRIX):
+    def visualizeGraph(self, name, matrixType=MatrixTypes.ADJACENCYMATRIX,withWeights=False):
+        graph = nx.DiGraph()
         self.getEdges(matrixType)
         self.transformToAdjacencyMatrix(matrixType)
-        graph = nx.DiGraph()
         graph.add_nodes_from(self.vertexList)
-        for edge in self.edges:
-            graph.add_edge(edge[0], edge[1])
-        nx.draw_circular(graph, with_labels = True)
+        if(withWeights):
+            for edge in self.edges:
+                graph.add_edge(edge[0], edge[1],weight = self.weights[edge[0]][edge[1]])
+            pos = nx.circular_layout(graph)
+            nx.draw(graph, pos, with_labels=True)
+            edge_labels = nx.get_edge_attributes(graph, 'weight')
+            nx.draw_networkx_edge_labels(graph, pos, edge_labels=edge_labels, label_pos=0.2)
+        else:
+            for edge in self.edges:
+                graph.add_edge(edge[0], edge[1])
+            nx.draw_circular(graph, with_labels = True)
         plt.savefig(name + ".png")
         plt.clf()
     #wymaga adjlist
-    def Kosaraju(self):
+    def Kosaraju(self,returnNumberofComponents = False):
         visit = [] #czas odwiedzenia
         final = []  #czas przetworzen
         comp = [] # numer silnie spójnej składowej 
@@ -706,6 +713,8 @@ class DirectedGraph(Graph):
             components[x].append(i)
         print("Ten graf ma {} składowe:".format(len(components)))
         print(components)
+        if(returnNumberofComponents):
+            return len(components)
     #works on adjlist      
     def DFS_visit(graph,visit,final,vert,t2):
             t2[0] += 1
@@ -721,6 +730,25 @@ class DirectedGraph(Graph):
             if(comp[vertex] == -1):
                 comp[vertex] = nr
                 graph.components_r(nr,vertex,comp)
+    def assignRandomWeightsToEdges(self,min,max):
+       for i in range(self.vertexNumber):
+           for j in range(self.vertexNumber):
+               if(self.adjacencyMatrix[i][j] == 1):
+                   self.weights[i][j] = random.randint(min,max)
+    #works on edges
+    def BellmanFord(self,vertexStart):
+        lengths, predecessors = self.init(vertexStart)
+        for i in range(1,self.vertexNumber-1):
+            for edge in self.edges:
+                self.relax(edge[0], edge[1], self.weights, lengths, predecessors)
+    
+        for edge in self.edges:
+            if(lengths[edge[1]] > (lengths[edge[0]] + self.weights[edge[0]][edge[1]])):
+                print("W grafie jest cykl o ujemnej wadze osiągalny ze źrodła: ",vertexStart)
+                return False
+        print("Długość ścieżek:",lengths) # długości najkrótszych ścieżek od zadanego wierzchołka do kolejnych wierzchołków
+        return True
+    
     @staticmethod
     def generateGraphWithProbability(vertexNumber, probability):
         if not (0 <= probability <= 1):
