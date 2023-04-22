@@ -612,6 +612,7 @@ class NotDirectedGraph(Graph):
                     randInt = random.randint(1,10)
                     graph.weights[i][j] = randInt
                     graph.weights[j][i] = randInt
+        return graph
 
 
 
