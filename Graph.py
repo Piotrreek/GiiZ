@@ -63,6 +63,10 @@ class Graph:
         self.adjacencyMatrix[vertexFirst][vertexSecond] = 1
         self.adjacencyMatrix[vertexSecond][vertexFirst] = 1
 
+    def removeEdge(self, vertexFirst, vertexSecond):
+        self.adjacencyMatrix[vertexFirst][vertexSecond] = 0
+        self.adjacencyMatrix[vertexSecond][vertexFirst] = 0
+
     def printAdjacencyMatrix(self):
         for row in self.adjacencyMatrix:
             print(row)
@@ -495,7 +499,7 @@ class NotDirectedGraph(Graph):
         print("Stopnie wierzchołków: ",vertDegCopy)
         return graph
     @staticmethod
-    def generateRegularGraph(vertexNumber,vertexDegree,name):
+    def generateRegularGraph(vertexNumber,vertexDegree, visualize=False, name=""):
         #Checking requirements
         if(vertexNumber <= vertexDegree or (vertexDegree % 2 == 1 and vertexNumber % 2 ==1)):
             print("Warunki nie są spełnione")
@@ -503,9 +507,13 @@ class NotDirectedGraph(Graph):
         sequence = []
         for i in range (vertexNumber):
             sequence.append(vertexDegree)
-        NotDirectedGraph.generateGraphFromDegreeSequence2(sequence,name)
-        #randomizacja
-        #brak kodu
+        graph = NotDirectedGraph.generateAndRandomizeGraphFromDegreeSequence(sequence, 100)
+
+        if visualize:
+            graph.visualizeGraph(name, MatrixTypes.ADJACENCYMATRIX)
+        else:
+            return graph
+
     @staticmethod
     def setAdjList(adjList, matrixType, graph):
         if matrixType == MatrixTypes.ADJACENCYMATRIX:
@@ -544,87 +552,69 @@ class NotDirectedGraph(Graph):
                     return False
 
     @staticmethod
-    def generateGraphFromDegreeSequence(arr, name):
-        if NotDirectedGraph.checkIfDegreeSequenceIsGraphic(arr):
-            n = len(arr)
-            arr.sort(reverse=True)
-            mat = [[0] * n for i in range(n)]
-
+    def generateGraphFromDegreeSequence(sequence, visualize=False, name=""):
+        if NotDirectedGraph.checkIfDegreeSequenceIsGraphic(sequence):
+            sequence.sort(reverse=True)
+            n = len(sequence)
+            graph = NotDirectedGraph(n)
             for i in range(n):
                 for j in range(i + 1, n):
+                    if sequence[i] > 0 and sequence[j] > 0:
+                        graph.addEdge(i, j)
+                        sequence[i] -= 1
+                        sequence[j] -= 1
 
-                    # For each pair of vertex decrement
-                    # the degree of both vertex.
-                    if (arr[i] > 0 and arr[j] > 0):
-                        arr[i] -= 1
-                        arr[j] -= 1
-                        mat[i][j] = 1
-                        mat[j][i] = 1
-
-            with open('mat.csv', 'w', newline='') as file:
-                writer = csv.writer(file)
-
-                for i in range(n):
-                    row = []
-                    for j in range(n):
-                        row.append(mat[i][j])
-                    writer.writerow(row)
-
-            graph = NotDirectedGraph()
-            graph.readMatrixFromCsv('mat.csv', MatrixType=MatrixTypes.ADJACENCYMATRIX)
-            graph.visualizeGraph(name)
+            if visualize:
+                graph.visualizeGraph(name, MatrixTypes.ADJACENCYMATRIX)
+            else:
+                graph.convertAdjMatrixToList()
+                graph.convertAdjMatrixToIncMatrix()
+                return graph
         else:
             print("Given degree sequence is not graphic")
-    #new version old examples now working this is overcomplicated because I didn't see error earlier and I am to tired to go back to easier implementations
-    @staticmethod 
-    def generateGraphFromDegreeSequence2(arr, name):
-        if NotDirectedGraph.checkIfDegreeSequenceIsGraphic(arr):
-            n = len(arr)
-            arr.sort(reverse=True)
-            mat = [[0] * n for i in range(n)]
-            
-            vertexValue = []
-            for i in range (n):
-                vertexValue.append((i,arr[i]))
-            max_tuple = vertexValue[0]
-            while(True):
-                for j in range(1, n):
 
-                    # For each pair of vertex decrement
-                    # the degree of both vertex.
-                    if (arr[0] > 0 and arr[j] > 0):
-                        arr[0] -= 1
-                        arr[j] -= 1
-                        for tup in vertexValue:
-                            if (tup[1] == (arr[j]+1) and tup[0] != max_tuple[0]):
-                                tuple_number = tup[0]
-                                break
-                        mat[max_tuple[0]][tuple_number] = 1
-                        mat[tuple_number][max_tuple[0]] = 1
-                        vertexValue[tuple_number] = (vertexValue[tuple_number][0],vertexValue[tuple_number][1]-1)
-                vertexValue[max_tuple[0]] = (vertexValue[max_tuple[0]][0],0)
-                arr.sort(reverse=True)
-                max_value = -1
-                for tup in vertexValue:
-                    if tup[1] > max_value:
-                        max_value = tup[1]
-                        max_tuple = tup
-                if(arr[0] == 0):
-                    break
-            with open('mat.csv', 'w', newline='') as file:
-                writer = csv.writer(file)
+    @staticmethod
+    def generateAndRandomizeGraphFromDegreeSequence(sequence, iter_number, visualize=False, name=""):
+        graph = NotDirectedGraph.generateGraphFromDegreeSequence(sequence)
+        if graph is not None:
+            actual_iter = 0
+            while actual_iter < iter_number:
+                a, b = random.sample(range(len(sequence)), 2)
+                c, d = random.sample(range(len(sequence)), 2)
+                graph.convertAdjMatrixToList()
 
-                for i in range(n):
-                    row = []
-                    for j in range(n):
-                        row.append(mat[i][j])
-                    writer.writerow(row)
+                if (b in graph.adjacencyList[a]) and (d in graph.adjacencyList[c]) and (
+                        d not in graph.adjacencyList[a]) and (c not in graph.adjacencyList[b]) \
+                        and (a != c) and (b != d) and (a != d) and (c != b):
+                    graph.removeEdge(a, b)
+                    graph.removeEdge(c, d)
+                    graph.addEdge(a, d)
+                    graph.addEdge(b, c)
+                    actual_iter += 1
 
-            graph = NotDirectedGraph()
-            graph.readMatrixFromCsv('mat.csv', MatrixType=MatrixTypes.ADJACENCYMATRIX)
-            graph.visualizeGraph(name)
-        else:
-            print("Given degree sequence is not graphic")
+            if visualize:
+                graph.convertAdjMatrixToIncMatrix()
+                graph.edges = []
+                graph.getEdgesInAdjacencyMatrix()
+                graph.visualizeGraph(name, MatrixTypes.ADJACENCYMATRIX)
+            else:
+                graph.edges = []
+                graph.convertAdjMatrixToList()
+                graph.convertAdjMatrixToIncMatrix()
+                return graph
+
+    @staticmethod
+    def generateGraphWithRandomWeights(vertexNumer, vertexDeegre):
+        graph = NotDirectedGraph.generateRegularGraph(vertexNumer, vertexDeegre)
+        for i in range(len(graph.adjacencyMatrix)):
+            for j in range(i+1, len(graph.adjacencyMatrix)):
+                if graph.adjacencyMatrix[i][j] == 1:
+                    randInt = random.randint(1,10)
+                    graph.weights[i][j] = randInt
+                    graph.weights[j][i] = randInt
+
+
+
 class DirectedGraph(Graph):
     # macierz incydencji -> macierz sasiedztwa
     def convertIncMatrixToAdjMatrix(self):
