@@ -18,6 +18,5 @@ sequence4 = [3, 3, 3, 3]
 print(sequence4, end=' ')
 print("is graphic sequence" if Graph.NotDirectedGraph.checkIfDegreeSequenceIsGraphic(sequence4) else "is not graphic sequence")
 
-Graph.NotDirectedGraph.generateGraphFromDegreeSequence([1, 3, 2, 3, 2, 4, 1], "graph1")
-Graph.NotDirectedGraph.generateGraphFromDegreeSequence([1, 3, 3, 4, 2, 3, 1], "graph2")
-Graph.NotDirectedGraph.generateGraphFromDegreeSequence([3, 3, 3, 3], "graph3")
+Graph.NotDirectedGraph.generateGraphFromDegreeSequence([1, 3, 2, 3, 2, 4, 1], True, "graph_from_sequence1")
+Graph.NotDirectedGraph.generateGraphFromDegreeSequence([4, 2, 2, 3, 2, 1, 4, 2, 2, 2, 2], True, "graph_from_sequence2")
