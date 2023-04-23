@@ -22,6 +22,7 @@ class Graph:
         self.edges = []
         # tworzę macierz wag zainicjalizowaną wartoscia NaN
         self.weights = [["NaN" for _ in range(self.vertexNumber)] for _ in range(self.vertexNumber)]
+        self.lengths = []
     
     def readMatrixFromCsv(self, filePath, MatrixType):
         matrix = []
@@ -131,19 +132,6 @@ class Graph:
         lengths[vertexId] = 0
         return lengths, predecessors
     
-    def relax(self, u, v, weights, lengths, predecessors):
-        if lengths[v] > lengths[u] + weights[u][v]:
-            lengths[v] = lengths[u] + weights[u][v]
-        predecessors[v] = u 
-    # zamiana w macierz sasiedztwa dowolnego z dwoch pozostalych typow w celu zwizualizowania macierzy
-    def transformToAdjacencyMatrix(self, matrixType):
-        if matrixType == MatrixTypes.INCIDENCEMATRIX:
-            self.convertIncMatrixToAdjMatrix()
-        elif matrixType == MatrixTypes.ADJACENCYLIST:
-            self.convertAdjListToAdjMatrix()
-
-class NotDirectedGraph(Graph):
-   
     def readWeightsFromCsv(self, filePath):
         with open(filePath, newline='', encoding='utf-8-sig') as csvfile:
             reader = csv.reader(csvfile, delimiter=',')
@@ -155,6 +143,47 @@ class NotDirectedGraph(Graph):
                     w += 1
                     if weight != "NaN":
                         self.weights[r][w] = int(weight)
+    
+    def relax(self, u, v, weights, lengths, predecessors):
+        if lengths[v] > lengths[u] + weights[u][v]:
+            lengths[v] = lengths[u] + weights[u][v]
+        predecessors[v] = u 
+    # zamiana w macierz sasiedztwa dowolnego z dwoch pozostalych typow w celu zwizualizowania macierzy
+    def transformToAdjacencyMatrix(self, matrixType):
+        if matrixType == MatrixTypes.INCIDENCEMATRIX:
+            self.convertIncMatrixToAdjMatrix()
+        elif matrixType == MatrixTypes.ADJACENCYLIST:
+            self.convertAdjListToAdjMatrix()
+
+    def Dijkstra(self, vertexId, shouldPrint = False):
+        lengths, predecessors = self.init(vertexId)
+        S = []
+        while len(S) != self.vertexNumber:
+            notReadyVertexes = [vertex for vertex in self.vertexList if vertex not in S]
+            u = min(notReadyVertexes, key=lambda x: lengths[x])
+            S.append(u)
+            neighboursOfVertexU = [vertex for vertex in self.adjacencyList[u] if vertex not in S]
+            for vertex in neighboursOfVertexU:
+                self.relax(u, vertex, self.weights, lengths, predecessors)
+        if shouldPrint:
+            print(f'START: s = {vertexId}')
+            for vertex in range(self.vertexNumber):
+                print(f'd({vertex}) = {lengths[vertex]} ==>', end=' ')
+                print('[', end='')
+                path = [vertex]
+                precedessor = predecessors[vertex]
+                while precedessor != "NIL":
+                    path.append(precedessor)
+                    precedessor = predecessors[precedessor]
+                path = path[::-1]
+                for val in path:
+                    if(val != path[-1]):
+                        print(f'{val} - ', end='')
+                    else:
+                        print(f'{val}]')
+        return lengths
+
+class NotDirectedGraph(Graph):
     # macierz sasiedztwa -> macierz incydencji
     def convertAdjMatrixToIncMatrix(self):
         if not self.edges:
@@ -356,34 +385,6 @@ class NotDirectedGraph(Graph):
             if firstElem in tup and secondElem in tup:
                 return True
         return False
-    
-    def Dijkstra(self, vertexId, shouldPrint = False):
-        lengths, predecessors = self.init(vertexId)
-        S = []
-        while len(S) != self.vertexNumber:
-            notReadyVertexes = [vertex for vertex in self.vertexList if vertex not in S]
-            u = min(notReadyVertexes, key=lambda x: lengths[x])
-            S.append(u)
-            neighboursOfVertexU = [vertex for vertex in self.adjacencyList[u] if vertex not in S]
-            for vertex in neighboursOfVertexU:
-                self.relax(u, vertex, self.weights, lengths, predecessors)
-        if shouldPrint:
-            print(f'START: s = {vertexId}')
-            for vertex in range(self.vertexNumber):
-                print(f'd({vertex}) = {lengths[vertex]} ==>', end=' ')
-                print('[', end='')
-                path = [vertex]
-                precedessor = predecessors[vertex]
-                while precedessor != "NIL":
-                    path.append(precedessor)
-                    precedessor = predecessors[precedessor]
-                path = path[::-1]
-                for val in path:
-                    if(val != path[-1]):
-                        print(f'{val} - ', end='')
-                    else:
-                        print(f'{val}]')
-        return lengths
 
     def getMatrixOfDistances(self):
         distances = []
@@ -728,18 +729,62 @@ class DirectedGraph(Graph):
                    self.weights[i][j] = random.randint(min,max)
     #works on edges
     def BellmanFord(self,vertexStart):
-        lengths, predecessors = self.init(vertexStart)
+        self.lengths, predecessors = self.init(vertexStart)
         for i in range(1,self.vertexNumber-1):
             for edge in self.edges:
-                self.relax(edge[0], edge[1], self.weights, lengths, predecessors)
+                self.relax(edge[0], edge[1], self.weights, self.lengths, predecessors)
     
         for edge in self.edges:
-            if(lengths[edge[1]] > (lengths[edge[0]] + self.weights[edge[0]][edge[1]])):
+            if(self.lengths[edge[1]] > (self.lengths[edge[0]] + self.weights[edge[0]][edge[1]])):
                 print("W grafie jest cykl o ujemnej wadze osiągalny ze źrodła: ",vertexStart)
                 return False
-        print("Długość ścieżek:",lengths) # długości najkrótszych ścieżek od zadanego wierzchołka do kolejnych wierzchołków
+        print("Długość ścieżek:",self.lengths) # długości najkrótszych ścieżek od zadanego wierzchołka do kolejnych wierzchołków
         return True
     
+    #dzialamy na grafie opartym o liste sasiedztwa
+    @staticmethod
+    def johnsonAlgorithm(graph):
+        graph.getEdgesInAdjacencyList()
+        DirectedGraph.add_s(graph)
+        if(graph.BellmanFord(graph.vertexNumber-1) == False):
+            print("Błąd")
+            return
+        h = [v for v in graph.vertexList]
+        for edge in graph.edges:
+            graph.weights[edge[0]][edge[1]] = graph.weights[edge[0]][edge[1]] + h[edge[0]] - h[edge[1]]
+        D = [[0 for _ in range(graph.vertexNumber)] for _ in range(graph.vertexNumber)]
+        for u in graph.vertexList:
+            d = graph.Dijkstra(u)
+            for v in graph.vertexList:
+                D[u][v] = d[v] - h[u] + h[v]
+        return [row[:-1] for row in D][:-1]
+
+    @staticmethod
+    def add_s(graph):
+        newEdgeNum = graph.vertexNumber
+        graph.vertexList.append(newEdgeNum)
+        graph.vertexNumber+=1
+        graph.addColumnAndRowToMatrixes(graph)
+        for vertex in graph.vertexList:
+            graph.edges.append([newEdgeNum, vertex])
+            graph.weights[newEdgeNum][vertex] = 0
+            graph.weights[vertex][newEdgeNum] = 0
+        graph.adjacencyList[newEdgeNum] = [0, 1, 2]
+        if([newEdgeNum, newEdgeNum] in graph.edges):
+            graph.edges.remove([newEdgeNum, newEdgeNum])
+
+    @staticmethod
+    def addColumnAndRowToMatrixes(graph):
+        graph.addColumnAndRowToMatrix(graph.weights)
+        graph.addColumnAndRowToMatrix(graph.adjacencyMatrix)
+        graph.addColumnAndRowToMatrix(graph.incidenceMatrix)
+
+    @staticmethod
+    def addColumnAndRowToMatrix(matrix):
+        for row in matrix:
+            row.append(0)
+        matrix.append([0] * (len(matrix[0])))
+
     @staticmethod
     def generateGraphWithProbability(vertexNumber, probability):
         if not (0 <= probability <= 1):
