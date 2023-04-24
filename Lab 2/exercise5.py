@@ -5,6 +5,6 @@ import Graph
 
 vertexNumber = 7
 vertexDegree = 2
-
-g = Graph.NotDirectedGraph.generateRegularGraph(vertexNumber,vertexDegree,True,"regular")
+randomizeAmount = 10
+g = Graph.NotDirectedGraph.generateRegularGraph(vertexNumber,vertexDegree,randomizeAmount,True,"regular")
 

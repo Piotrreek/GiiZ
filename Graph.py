@@ -430,7 +430,23 @@ class NotDirectedGraph(Graph):
                 if (not (j,i) in edgesToWeightsOfEdges) and j!=i and self.weights[i][j] != 0:
                     edgesToWeightsOfEdges[(i,j)] = self.weights[i][j]
         return {k: v for k, v in sorted(edgesToWeightsOfEdges.items(), key=lambda item: item[1])}
-
+    def randomizeGraph(self,iter_number):
+        if self is not None:
+            actual_iter = 0
+            while actual_iter < iter_number:
+                a, b = random.sample(range(self.vertexNumber), 2)
+                c, d = random.sample(range(self.vertexNumber), 2)
+                self.convertAdjMatrixToList()
+                if (b in self.adjacencyList[a]) and (d in self.adjacencyList[c]) and (
+                        d not in self.adjacencyList[a]) and (c not in self.adjacencyList[b]) \
+                        and (a != c) and (b != d) and (a != d) and (c != b):
+                    self.removeEdge(a, b)
+                    self.removeEdge(c, d)
+                    self.addEdge(a, d)
+                    self.addEdge(b, c)
+                    actual_iter += 1   
+        self.edges = []
+        self.getEdgesInAdjacencyMatrix()
     @staticmethod
     def isHamiltonian(adjList, matrixType):
         vertexNum = len(adjList) 
@@ -510,7 +526,7 @@ class NotDirectedGraph(Graph):
             print("Stworzono graf Eulerowski")
         return graph
     @staticmethod
-    def generateRegularGraph(vertexNumber,vertexDegree, visualize=False, name=""):
+    def generateRegularGraph(vertexNumber,vertexDegree,randomizeAmount, visualize=False, name=""):
         #Checking requirements
         if(vertexNumber <= vertexDegree or (vertexDegree % 2 == 1 and vertexNumber % 2 ==1)):
             print("Warunki nie są spełnione")
@@ -522,8 +538,8 @@ class NotDirectedGraph(Graph):
         graph = NotDirectedGraph.generateAndRandomizeGraphFromDegreeSequence(sequence, 100)
         while(graph is None):
             graph = NotDirectedGraph.generateRandomGraph(vertexNumber,vertexDegree)
+        graph.randomizeGraph(randomizeAmount)
         if(graph != None):
-            print(graph.edges)
             if visualize:
                 graph.visualizeGraph(name, MatrixTypes.ADJACENCYMATRIX)
             else:
