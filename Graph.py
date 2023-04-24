@@ -437,7 +437,7 @@ class NotDirectedGraph(Graph):
         visited = [False] * vertexNum 
         path = [] 
         graph = Graph()
-        graph.setAdjList(adjList, matrixType, graph)
+        NotDirectedGraph.setAdjList(adjList, matrixType, graph)
 
         def dfs(vertex):
             visited[vertex] = True
