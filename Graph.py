@@ -466,13 +466,18 @@ class NotDirectedGraph(Graph):
 
         return False
     @staticmethod
-    def generateEulerGraph(vertexNumber):
+    def generateRandomGraph(vertexNumber,vertexDegree=None):
         graph = NotDirectedGraph(vertexNumber)
         edges = []
         vertDeg = []
-        for vertex in range(0,vertexNumber): 
-            random_even_number = random.randint(1,(vertexNumber-1)//2) * 2
-            vertDeg.append(random_even_number)
+        vertDegCopy = [] 
+        for vertex in range(0,vertexNumber):
+            if(vertexDegree != None):
+                vertDeg.append(vertexDegree) 
+            else:
+                random_even_number = random.randint(1,(vertexNumber-1)//2) * 2
+                vertDeg.append(random_even_number)
+        
         vertDegCopy = vertDeg.copy()
         for vertex in range(0,vertexNumber):
             for k in range(vertDeg[vertex]):
@@ -496,8 +501,13 @@ class NotDirectedGraph(Graph):
             graph.addEdge(edges[n][0],edges[n][1])
         graph.getEdgesInAdjacencyMatrix()
         graph.convertAdjMatrixToList()
-        print("Stworzono graf Eulerowski")
         print("Stopnie wierzchołków: ",vertDegCopy)
+        return graph
+    @staticmethod
+    def generateEulerGraph(vertexNumber):
+        graph = NotDirectedGraph.generateRandomGraph(vertexNumber)
+        if(graph != None):
+            print("Stworzono graf Eulerowski")
         return graph
     @staticmethod
     def generateRegularGraph(vertexNumber,vertexDegree, visualize=False, name=""):
@@ -508,12 +518,16 @@ class NotDirectedGraph(Graph):
         sequence = []
         for i in range (vertexNumber):
             sequence.append(vertexDegree)
-        graph = NotDirectedGraph.generateAndRandomizeGraphFromDegreeSequence(sequence, 100)
 
-        if visualize:
-            graph.visualizeGraph(name, MatrixTypes.ADJACENCYMATRIX)
-        else:
-            return graph
+        graph = NotDirectedGraph.generateAndRandomizeGraphFromDegreeSequence(sequence, 100)
+        while(graph is None):
+            graph = NotDirectedGraph.generateRandomGraph(vertexNumber,vertexDegree)
+        if(graph != None):
+            print(graph.edges)
+            if visualize:
+                graph.visualizeGraph(name, MatrixTypes.ADJACENCYMATRIX)
+            else:
+                return graph
 
     @staticmethod
     def setAdjList(adjList, matrixType, graph):
