@@ -532,7 +532,7 @@ class NotDirectedGraph(Graph):
     def checkIfDegreeSequenceIsGraphic(arr, show=False):
         while True:
 
-            arr.sort(reverse=True)
+            arr.sort(reverse=False)
 
             if show:
                 print(arr)
