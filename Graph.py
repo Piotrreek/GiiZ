@@ -21,7 +21,7 @@ class Graph:
         self.adjacencyList = dict.fromkeys(range(vertexNumber), [])
         self.edges = []
         # tworzę macierz wag zainicjalizowaną wartoscia NaN
-        self.weights = [["NaN" for _ in range(self.vertexNumber)] for _ in range(self.vertexNumber)]
+        self.weights = [[0 for _ in range(self.vertexNumber)] for _ in range(self.vertexNumber)]
         self.lengths = []
     
     def readMatrixFromCsv(self, filePath, MatrixType):
@@ -526,7 +526,7 @@ class NotDirectedGraph(Graph):
             print("Stworzono graf Eulerowski")
         return graph
     @staticmethod
-    def generateRegularGraph(vertexNumber,vertexDegree,randomizeAmount, visualize=False, name=""):
+    def generateRegularGraph(vertexNumber,vertexDegree,randomizeAmount = 10, visualize=False, name=""):
         #Checking requirements
         if(vertexNumber <= vertexDegree or (vertexDegree % 2 == 1 and vertexNumber % 2 ==1)):
             print("Warunki nie są spełnione")
