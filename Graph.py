@@ -482,7 +482,7 @@ class NotDirectedGraph(Graph):
 
         return False
     @staticmethod
-    def generateRandomGraph(vertexNumber,vertexDegree=None):
+    def generateRandomGraph(vertexNumber,vertexDegree=None,connected=False):
         graph = NotDirectedGraph(vertexNumber)
         edges = []
         vertDeg = []
@@ -502,7 +502,7 @@ class NotDirectedGraph(Graph):
                     if(not graph.isInTheList(edges,vertex,i) and vertDeg[i] >= 1 and i != vertex):
                         counter += 1
                 if(counter == 0):
-                    # print("tego grafu nie da się stworzyć - reset")
+                    print("tego grafu nie da się stworzyć - reset")
                     return None
                 while True:
                     random_vertex = random.randint(0, vertexNumber-1)
@@ -517,15 +517,22 @@ class NotDirectedGraph(Graph):
             graph.addEdge(edges[n][0],edges[n][1])
         graph.getEdgesInAdjacencyMatrix()
         graph.convertAdjMatrixToList()
-        # print("Stopnie wierzchołków: ",vertDegCopy)
+        print("Stopnie wierzchołków: ",vertDegCopy)
+        if(connected):
+            comp = graph.components()
+            if(max(comp) != 1):
+                print("graf nie jest spójny")
+                return None
+        
         return graph
     @staticmethod
     def generateEulerGraph(vertexNumber):
-        graph = NotDirectedGraph.generateRandomGraph(vertexNumber)
+        graph = NotDirectedGraph.generateRandomGraph(vertexNumber,None,True)
+        while(graph is None):
+            graph = NotDirectedGraph.generateRandomGraph(vertexNumber,None,True)
         if(graph != None):
             print("Stworzono graf Eulerowski")
         return graph
-    @staticmethod
     @staticmethod
     def generateRegularGraph(vertexNumber,vertexDegree,randomizeAmount=10, visualize=False, name=""):
         #Checking requirements
@@ -638,7 +645,10 @@ class NotDirectedGraph(Graph):
 
     @staticmethod
     def generateGraphWithRandomWeights(vertexNumer, vertexDeegre):
-        graph = NotDirectedGraph.generateRegularGraph(vertexNumer, vertexDeegre)
+        # graph = NotDirectedGraph.generateRegularGraph(vertexNumer, vertexDeegre)
+        graph = NotDirectedGraph.generateRandomGraph(vertexNumer, vertexDeegre,True)
+        while (graph is None):
+            graph = NotDirectedGraph.generateRandomGraph(vertexNumer, vertexDeegre,True)
         for i in range(len(graph.adjacencyMatrix)):
             for j in range(i+1, len(graph.adjacencyMatrix)):
                 if graph.adjacencyMatrix[i][j] == 1:
