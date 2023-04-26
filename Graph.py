@@ -502,7 +502,7 @@ class NotDirectedGraph(Graph):
                     if(not graph.isInTheList(edges,vertex,i) and vertDeg[i] >= 1 and i != vertex):
                         counter += 1
                 if(counter == 0):
-                    print("tego grafu nie da się stworzyć - reset")
+                    # print("tego grafu nie da się stworzyć - reset")
                     return None
                 while True:
                     random_vertex = random.randint(0, vertexNumber-1)
@@ -517,7 +517,7 @@ class NotDirectedGraph(Graph):
             graph.addEdge(edges[n][0],edges[n][1])
         graph.getEdgesInAdjacencyMatrix()
         graph.convertAdjMatrixToList()
-        print("Stopnie wierzchołków: ",vertDegCopy)
+        # print("Stopnie wierzchołków: ",vertDegCopy)
         return graph
     @staticmethod
     def generateEulerGraph(vertexNumber):
