@@ -526,7 +526,8 @@ class NotDirectedGraph(Graph):
             print("Stworzono graf Eulerowski")
         return graph
     @staticmethod
-    def generateRegularGraph(vertexNumber,vertexDegree,randomizeAmount = 10, visualize=False, name=""):
+    @staticmethod
+    def generateRegularGraph(vertexNumber,vertexDegree,randomizeAmount=10, visualize=False, name=""):
         #Checking requirements
         if(vertexNumber <= vertexDegree or (vertexDegree % 2 == 1 and vertexNumber % 2 ==1)):
             print("Warunki nie są spełnione")
@@ -534,8 +535,9 @@ class NotDirectedGraph(Graph):
         sequence = []
         for i in range (vertexNumber):
             sequence.append(vertexDegree)
-
-        graph = NotDirectedGraph.generateAndRandomizeGraphFromDegreeSequence(sequence, 100)
+        graph = NotDirectedGraph.generateAndRandomizeGraphFromDegreeSequence(sequence, randomizeAmount)
+        if(len(graph.edges) != sum(sequence)/2):
+            graph = NotDirectedGraph.generateRandomGraph(vertexNumber,vertexDegree)
         while(graph is None):
             graph = NotDirectedGraph.generateRandomGraph(vertexNumber,vertexDegree)
         graph.randomizeGraph(randomizeAmount)
