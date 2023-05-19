@@ -14,8 +14,6 @@ import Graph
 vertexNumber = 5
 
 g = Graph.NotDirectedGraph.generateEulerGraph(vertexNumber)
-while(g is None):
-    g = Graph.NotDirectedGraph.generateEulerGraph(vertexNumber)
 if(g is not  None):
     g.convertAdjListToAdjMatrix()
     #print(g.edges)

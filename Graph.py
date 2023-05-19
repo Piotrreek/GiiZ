@@ -1,3 +1,4 @@
+import copy
 import random
 import networkx as nx
 import matplotlib.pyplot as plt
@@ -482,7 +483,7 @@ class NotDirectedGraph(Graph):
 
         return False
     @staticmethod
-    def generateRandomGraph(vertexNumber,vertexDegree=None):
+    def generateRandomGraph(vertexNumber,vertexDegree=None,connected=False):
         graph = NotDirectedGraph(vertexNumber)
         edges = []
         vertDeg = []
@@ -518,15 +519,23 @@ class NotDirectedGraph(Graph):
         graph.getEdgesInAdjacencyMatrix()
         graph.convertAdjMatrixToList()
         print("Stopnie wierzchołków: ",vertDegCopy)
+        if(connected):
+            comp = graph.components()
+            if(max(comp) != 1):
+                print("graf nie jest spójny")
+                return None
+        
         return graph
     @staticmethod
     def generateEulerGraph(vertexNumber):
-        graph = NotDirectedGraph.generateRandomGraph(vertexNumber)
+        graph = NotDirectedGraph.generateRandomGraph(vertexNumber,None,True)
+        while(graph is None):
+            graph = NotDirectedGraph.generateRandomGraph(vertexNumber,None,True)
         if(graph != None):
             print("Stworzono graf Eulerowski")
         return graph
     @staticmethod
-    def generateRegularGraph(vertexNumber,vertexDegree,randomizeAmount = 10, visualize=False, name=""):
+    def generateRegularGraph(vertexNumber,vertexDegree,randomizeAmount=10, visualize=False, name=""):
         #Checking requirements
         if(vertexNumber <= vertexDegree or (vertexDegree % 2 == 1 and vertexNumber % 2 ==1)):
             print("Warunki nie są spełnione")
@@ -534,8 +543,9 @@ class NotDirectedGraph(Graph):
         sequence = []
         for i in range (vertexNumber):
             sequence.append(vertexDegree)
-
-        graph = NotDirectedGraph.generateAndRandomizeGraphFromDegreeSequence(sequence, 100)
+        graph = NotDirectedGraph.generateAndRandomizeGraphFromDegreeSequence(sequence, randomizeAmount)
+        if(len(graph.edges) != sum(sequence)/2):
+            graph = NotDirectedGraph.generateRandomGraph(vertexNumber,vertexDegree)
         while(graph is None):
             graph = NotDirectedGraph.generateRandomGraph(vertexNumber,vertexDegree)
         graph.randomizeGraph(randomizeAmount)
@@ -562,7 +572,7 @@ class NotDirectedGraph(Graph):
     def checkIfDegreeSequenceIsGraphic(arr, show=False):
         while True:
 
-            arr.sort(reverse=False)
+            arr.sort(reverse=True)
 
             if show:
                 print(arr)
@@ -636,7 +646,10 @@ class NotDirectedGraph(Graph):
 
     @staticmethod
     def generateGraphWithRandomWeights(vertexNumer, vertexDeegre):
-        graph = NotDirectedGraph.generateRegularGraph(vertexNumer, vertexDeegre)
+        # graph = NotDirectedGraph.generateRegularGraph(vertexNumer, vertexDeegre)
+        graph = NotDirectedGraph.generateRandomGraph(vertexNumer, vertexDeegre,True)
+        while (graph is None):
+            graph = NotDirectedGraph.generateRandomGraph(vertexNumer, vertexDeegre,True)
         for i in range(len(graph.adjacencyMatrix)):
             for j in range(i+1, len(graph.adjacencyMatrix)):
                 if graph.adjacencyMatrix[i][j] == 1:
@@ -771,6 +784,44 @@ class DirectedGraph(Graph):
         print("Długość ścieżek:",self.lengths) # długości najkrótszych ścieżek od zadanego wierzchołka do kolejnych wierzchołków
         return True
     
+    def pageRankRandomMethod(self, vertexStart, d, iterationsNumber):
+        vertexToTimesVisited = {vertexStart: 1}
+        drawnVertexNum = random.choice(self.adjacencyList[vertexStart])
+        vertexToTimesVisited[drawnVertexNum] = 1
+        for _ in range(iterationsNumber-1):
+            if random.random() <= d:
+                drawnVertexNum = random.randint(0, len(self.adjacencyList)-1)
+                if drawnVertexNum in vertexToTimesVisited:
+                    vertexToTimesVisited[drawnVertexNum] += 1
+                else:
+                    vertexToTimesVisited[drawnVertexNum] = 1
+            else:
+                drawnVertexNum = random.choice(self.adjacencyList[drawnVertexNum])
+                if drawnVertexNum in vertexToTimesVisited:
+                    vertexToTimesVisited[drawnVertexNum] += 1
+                else:
+                    vertexToTimesVisited[drawnVertexNum] = 1
+        for key in vertexToTimesVisited.keys():
+            vertexToTimesVisited[key] /= iterationsNumber
+        vertexToTimesVisited = {k: v for k, v in sorted(vertexToTimesVisited.items(), key=lambda item: item[1], reverse=True)}
+        for key, value in vertexToTimesVisited.items():
+            print(f'{key}: {value}')
+    
+    #tutaj operujemy na liscie sasiedztwa, ktora konwertujemy na macierz sasiedztwa
+    def pageRankIterationMethod(self, n, d, eps):
+        self.convertAdjListToAdjMatrix()
+        pT = [1/n for _ in range(self.vertexNumber)]
+        P = [[0 for _ in range(self.vertexNumber)] for _ in range(self.vertexNumber)]
+        for i in range(self.vertexNumber):
+            for j in range(self.vertexNumber):
+                P[i][j] = (1-d)*self.adjacencyMatrix[i][j]/len(self.adjacencyList[i])+d/n
+        pT1 = np.dot(pT, P)
+        while(np.linalg.norm(pT1 - pT) > eps):
+            pT = copy.deepcopy(pT1)
+            pT1 = np.dot(pT, P)
+        for i, val in sorted(enumerate(pT1), key=lambda x: x[1], reverse=True):
+            print(f'{i}: {val}')
+
     #dzialamy na grafie opartym o liste sasiedztwa
     @staticmethod
     def johnsonAlgorithm(graph):
