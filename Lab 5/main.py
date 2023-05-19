@@ -38,19 +38,19 @@ def EdmondsKarpAlgorithm(flows, s, t, fileName):
     maxFlow = 0
 
     while (bfs(residual_capacity,s,t,parents)):
-        przeplywSciezka = float("Inf")
+        flowPath = float("Inf")
         val = t
         while val != s:
-            przeplywSciezka = min(przeplywSciezka, residual_capacity[parents[val]][val])
+            flowPath = min(flowPath, residual_capacity[parents[val]][val])
             val = parents[val]
-        maxFlow = maxFlow + przeplywSciezka
+        maxFlow = maxFlow + flowPath
 
-        wierzcholek = t
-        while wierzcholek != s:
-            u = parents[wierzcholek]
-            residual_capacity[u][wierzcholek] = residual_capacity[u][wierzcholek] - przeplywSciezka
-            residual_capacity[wierzcholek][u] = residual_capacity[wierzcholek][u] + przeplywSciezka
-            wierzcholek = parents[wierzcholek]
+        vertex = t
+        while vertex != s:
+            u = parents[vertex]
+            residual_capacity[u][vertex] = residual_capacity[u][vertex] - flowPath
+            residual_capacity[vertex][u] = residual_capacity[vertex][u] + flowPath
+            vertex = parents[vertex]
 
     print("Maksymalny przepływ wynosi:" + str(maxFlow))
 
