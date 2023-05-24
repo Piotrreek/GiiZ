@@ -12,7 +12,7 @@ vertexNumber = 7
 #     graph = Graph.DirectedGraph.generateGraphWithProbability(vertexNumber,0.3)
 # graph.assignRandomWeightsToEdges(-1,10)
 # graph.visualizeGraph("skierowany graf silnie spójny",withWeights= True)
-# graph.BellamanFord(0) # czesto wyrzuca że w grafie jest cykl o ujemnej wadze
+# graph.BellmanFord(0) # czesto wyrzuca że w grafie jest cykl o ujemnej wadze
 
 #przykłądowy graf z labow
 graph = Graph.DirectedGraph(vertexNumber)
